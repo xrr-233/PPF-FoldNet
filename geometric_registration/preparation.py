@@ -4,8 +4,7 @@ import sys
 import time
 import numpy as np
 import torch
-
-from geometric_registration.utils import get_pcd, get_keypts
+from utils import get_pcd, get_keypts
 from input_preparation import _ppf
 import importlib
 
@@ -100,18 +99,19 @@ if __name__ == '__main__':
         os.mkdir(f"ppf_desc_{model_str}")
          
     # dynamically load the model from snapshot
-    module_file_path = f'/home/xybai/PPF-FoldNet/snapshot/PPF-FoldNet{model_str}/model.py'
+    module_file_path = f'../snapshot/PPF-FoldNet{model_str}/model.py'
     module_name = 'models'
     module_spec = importlib.util.spec_from_file_location(module_name, module_file_path)
     module = importlib.util.module_from_spec(module_spec)
     module_spec.loader.exec_module(module)
 
     model = module.PPFFoldNet(10, 1024)
-    model.load_state_dict(torch.load(f'/home/xybai/PPF-FoldNet/snapshot/PPF-FoldNet{model_str}/models/sun3d_best.pkl'))
+    model.load_state_dict(torch.load(f'../snapshot/PPF-FoldNet{model_str}/models/sun3d_best.pkl'))
     for scene in scene_list:
-        pcdpath = f"/data/3DMatch/fragments/{scene}/"
-        interpath = f"/data/3DMatch/intermediate-files-real/{scene}/"
-        keyptspath = os.path.join(interpath, "keypoints/")
+        pcdpath = f"../data/3DMatch/fragments/{scene}/"
+        interpath = f"../data/3DMatch/intermediate-files-real/{scene}/"
+        # keyptspath = os.path.join(interpath, "keypoints/")
+        keyptspath = interpath
         ppfpath = os.path.join(interpath, "ppf/")
         ppfdescpath = os.path.join('.',f"ppf_desc_{model_str}/{scene}/")
         if not os.path.exists(ppfpath):

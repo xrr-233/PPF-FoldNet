@@ -38,21 +38,21 @@ class Args(object):
 
         # dataloader
         self.train_loader = get_dataloader(root=self.data_train_dir,
-                                                      batch_size=self.batch_size,
-                                                      split='train',
-                                                      num_patches=self.num_patches,
-                                                      num_points_per_patch=self.num_points_per_patch,
-                                                      shuffle=True,
-                                                      num_workers=4,
-                                                      )
+                                           batch_size=self.batch_size,
+                                           split='train',
+                                           num_patches=self.num_patches,
+                                           num_points_per_patch=self.num_points_per_patch,
+                                           shuffle=True,
+                                           num_workers=4,
+                                           )
         self.test_loader = get_dataloader(root=self.data_test_dir,
-                                                     batch_size=self.batch_size,
-                                                     split='test',
-                                                     num_patches=self.num_patches,
-                                                     num_points_per_patch=self.num_points_per_patch,
-                                                     shuffle=False,
-                                                     num_workers=4,
-                                                     )
+                                          batch_size=self.batch_size,
+                                          split='test',
+                                          num_patches=self.num_patches,
+                                          num_points_per_patch=self.num_points_per_patch,
+                                          shuffle=False,
+                                          num_workers=4,
+                                          )
         print("Training set size:", self.train_loader.dataset.__len__())
         print("Test set size:", self.test_loader.dataset.__len__())
         # snapshot

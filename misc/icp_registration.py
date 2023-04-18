@@ -1,7 +1,7 @@
 from open3d import *
 import numpy as np
 import copy
-from input_preparation import rgbd_to_point_cloud, cal_local_normal
+from geometric_registration.input_preparation import rgbd_to_point_cloud, cal_local_normal
 
 
 def draw_registration_result(source, target, transformation):

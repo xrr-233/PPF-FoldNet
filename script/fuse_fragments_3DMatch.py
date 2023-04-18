@@ -154,6 +154,7 @@ def run(cfg):
     uio.may_create_folder(cfg.out_root)
 
     scenes = uio.list_folders(cfg.dataset_root, sort=False)
+    exist_scenes = uio.list_folders(cfg.out_root, sort=False)
     print("{} scenes".format(len(scenes)))
     for scene in scenes:
         # if not scene.startswith('analysis'):
@@ -168,8 +169,8 @@ def run(cfg):
 # ---------------------------------------------------------------------------- #
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset_root', default='data/3DMatch/rgbd')
-    parser.add_argument('--out_root', default='data/3DMatch/rgbd_fragments/')
+    parser.add_argument('--dataset_root', default='../data/3DMatch/rgbd')
+    parser.add_argument('--out_root', default='../data/3DMatch/rgbd_fragments/')
     parser.add_argument('--depth_scale', type=float, default=1000.0)
     parser.add_argument('--depth_trunc', type=float, default=6.0)
     parser.add_argument('--frames_per_frag', type=int, default=50)

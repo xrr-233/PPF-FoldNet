@@ -34,7 +34,7 @@ This repo is the unofficial implementation for PPF-FoldNet(https://arxiv.org/abs
 - `intermediate-files-real/`: dictionary that saves the keypoints coordinates for each scene.
 - `fragments/`: fragments of test set.
 
-## Prepara the date
+## Prepare the data
 
 Use `script/download.sh` to download all the training set from [3DMatch](http://3dmatch.cs.princeton.edu/), and `script/fuse_fragments_3DMatch.py` to fuse rgbd frames into fragments.
 

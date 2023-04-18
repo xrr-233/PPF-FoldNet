@@ -1,13 +1,6 @@
-import os
 import os.path
-import open3d
-import numpy as np
-import time
-from tqdm import tqdm
-import json
-import numpy
 import torch.utils.data as data
-from input_preparation import *
+from geometric_registration.input_preparation import *
 
 
 class SunDataset(data.Dataset):

@@ -169,7 +169,7 @@ def get_local_patches_on_the_fly(data_dir, ind, num_patches, num_points_per_patc
 
 
 if __name__ == "__main__":
-    with open("./data/3DMatch/rgbd_fragments/scene_list_train.txt") as f:
+    with open("../data/3DMatch/rgbd_fragments/scene_list_train.txt") as f:
         scene_list = f.readlines()
     for scene in scene_list:
         scene = scene.replace("\n", "")
