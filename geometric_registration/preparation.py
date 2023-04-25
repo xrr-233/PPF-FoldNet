@@ -4,8 +4,8 @@ import sys
 import time
 import numpy as np
 import torch
-from utils import get_pcd, get_keypts
-from input_preparation import _ppf
+from geometric_registration.utils import get_pcd, get_keypts
+from geometric_registration.input_preparation import _ppf
 import importlib
 
 def build_ppf_input(pcd, keypts):
