@@ -8,26 +8,32 @@ from geometric_registration.utils import get_pcd, get_keypts
 from geometric_registration.input_preparation import _ppf
 import importlib
 
-def build_ppf_input(pcd, keypts):
+def build_ppf_input(pcd, keypts, experiment=False):
     kdtree = open3d.KDTreeFlann(pcd)
     keypts_id = []
     for i in range(keypts.shape[0]):
         _, id, _ = kdtree.search_knn_vector_3d(keypts[i], 1)
         keypts_id.append(id[0])
-    neighbor = collect_local_neighbor(keypts_id, pcd, vicinity=0.3, num_points=1024)
-    local_pachtes = build_local_patch(keypts_id, pcd, neighbor)
-    return local_pachtes
+    neighbor = collect_local_neighbor(keypts_id, pcd, vicinity=0.3, num_points=1024, experiment=experiment)
+    print(keypts_id[7])
+    print(neighbor[7])
+    local_patches = build_local_patch(keypts_id, pcd, neighbor)
+    return local_patches
 
 
-def collect_local_neighbor(ids, pcd, vicinity=0.3, num_points=1024):
+def collect_local_neighbor(ids, pcd, vicinity=0.3, num_points=1024, experiment=False):
     kdtree = open3d.geometry.KDTreeFlann(pcd)
     res = []
     for id in ids:
         [k, idx, variant] = kdtree.search_radius_vector_3d(pcd.points[id], vicinity)
         # random select fix number [num_points] of points to form the local patch.
         if k > num_points:
+            if experiment:
+                np.random.seed(42)
             idx = np.random.choice(idx[1:], num_points, replace=False)
         else:
+            if experiment:
+                np.random.seed(42)
             idx = np.random.choice(idx[1:], num_points)
         res.append(idx)
     return np.array(res)

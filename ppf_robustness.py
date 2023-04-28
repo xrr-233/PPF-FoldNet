@@ -24,8 +24,19 @@ def load_model():
 
     model = module.PPFFoldNet(10, 1024)
     model.load_state_dict(torch.load(f'pretrained/sun3d_best.pkl'))
+    model.eval()
 
     return model
+
+
+def visualize(frag_pcd, keypts_pcd):
+    visualizer = open3d.visualization.Visualizer()
+    visualizer.create_window()
+    keypts_pcd.paint_uniform_color(np.array([0.5, 0.5, 0.5]))
+    visualizer.add_geometry(keypts_pcd)
+    visualizer.add_geometry(frag_pcd)
+    visualizer.run()
+    visualizer.destroy_window()
 
 
 def get_codeword(local_patches, model):
@@ -58,13 +69,7 @@ def get_ppf_debug(frag_id):
     # res = [(keypts[i] == frag).all(axis=1).any() for i in range(1000, 1100)]
     # print(res)
 
-    visualizer = open3d.visualization.Visualizer()
-    visualizer.create_window()
-    keypts_pcd.paint_uniform_color(np.array([0.5, 0.5, 0.5]))
-    visualizer.add_geometry(keypts_pcd)
-    visualizer.add_geometry(frag_pcd)
-    visualizer.run()
-    visualizer.destroy_window()
+    visualize(frag_pcd, keypts_pcd)
 
     # F = { f (xr, x1) · · · f (xr, xi) · · · f (xr, xN) }, (num_points, N = 1024, 4)
     # 我们已经证明如果对f中四个元素进行指定处理（矩阵）确实是旋转不变，但是得看代码中PPF是怎么采用的（是四个元素的L2距离吗）
@@ -74,16 +79,23 @@ def get_ppf_debug(frag_id):
     return local_patches
 
 
-def get_ppf_default(frag_id):
+def get_ppf_default(frag_id, visualized=False):
     frag_name = f'cloud_bin_{frag_id}'
     frag_pcd = get_pcd(pcdpath, frag_name)
     # print(frag_pcd.has_normals())
     keypts = get_keypts(keyptspath, frag_name)
-    local_patches = build_ppf_input(frag_pcd, keypts)
+    keypts_pcd = open3d.geometry.PointCloud()
+    keypts_pcd.points = open3d.utility.Vector3dVector(keypts)
+    keypts = np.array(keypts_pcd.points)
+
+    if visualized:
+        visualize(frag_pcd, keypts_pcd)
+
+    local_patches = build_ppf_input(frag_pcd, keypts, experiment=True)
     return local_patches
 
 
-def get_ppf_translate(frag_id, T_mat=None):
+def get_ppf_translate(frag_id, T_mat=None, visualized=False):
     trans_mat = np.eye(4)
     if T_mat is None:
         T_mat = np.random.rand(3)
@@ -99,23 +111,18 @@ def get_ppf_translate(frag_id, T_mat=None):
     keypts_pcd.transform(trans_mat)
     keypts = np.array(keypts_pcd.points)
 
-    # visualizer = open3d.visualization.Visualizer()
-    # visualizer.create_window()
-    # keypts_pcd.paint_uniform_color(np.array([0.5, 0.5, 0.5]))
-    # visualizer.add_geometry(keypts_pcd)
-    # visualizer.add_geometry(frag_pcd)
-    # visualizer.run()
-    # visualizer.destroy_window()
+    if visualized:
+        visualize(frag_pcd, keypts_pcd)
 
-    local_patches = build_ppf_input(frag_pcd, keypts)
+    local_patches = build_ppf_input(frag_pcd, keypts, True)
     return local_patches
 
 
-def get_ppf_rotate(frag_id, R_mat=None):
+def get_ppf_rotate(frag_id, R_mat=None, visualized=False):
     trans_mat = np.eye(4)
     if R_mat is None:
         R_mat = R.random().as_matrix()
-    elif len(R_mat.shape) and R_mat.shape[0] == 3:
+    elif len(R_mat.shape) == 1 and R_mat.shape[0] == 3:
         R_mat = R.from_euler('xyz', R_mat).as_matrix()
     trans_mat[:3, :3] = R_mat
     # print(trans_mat)
@@ -129,19 +136,14 @@ def get_ppf_rotate(frag_id, R_mat=None):
     keypts_pcd.transform(trans_mat)
     keypts = np.array(keypts_pcd.points)
 
-    # visualizer = open3d.visualization.Visualizer()
-    # visualizer.create_window()
-    # keypts_pcd.paint_uniform_color(np.array([0.5, 0.5, 0.5]))
-    # visualizer.add_geometry(keypts_pcd)
-    # visualizer.add_geometry(frag_pcd)
-    # visualizer.run()
-    # visualizer.destroy_window()
+    if visualized:
+        visualize(frag_pcd, keypts_pcd)
 
-    local_patches = build_ppf_input(frag_pcd, keypts)
+    local_patches = build_ppf_input(frag_pcd, keypts, True)
     return local_patches
 
 
-def get_ppf_remove(frag_id, remove_prop=0.8):
+def get_ppf_remove(frag_id, remove_prop=0.8, visualized=False):
     frag_name = f'cloud_bin_{frag_id}'
     frag_pcd = get_pcd(pcdpath, frag_name)
     frag = np.array(frag_pcd.points)
@@ -162,19 +164,14 @@ def get_ppf_remove(frag_id, remove_prop=0.8):
     keypts_pcd.points = open3d.utility.Vector3dVector(keypts)
     keypts = np.array(keypts_pcd.points)
 
-    # visualizer = open3d.visualization.Visualizer()
-    # visualizer.create_window()
-    # keypts_pcd.paint_uniform_color(np.array([0.5, 0.5, 0.5]))
-    # visualizer.add_geometry(keypts_pcd)
-    # visualizer.add_geometry(frag_pcd)
-    # visualizer.run()
-    # visualizer.destroy_window()
+    if visualized:
+        visualize(frag_pcd, keypts_pcd)
 
-    local_patches = build_ppf_input(frag_pcd, keypts)
+    local_patches = build_ppf_input(frag_pcd, keypts, True)
     return local_patches
 
 
-def get_ppf_perturb(frag_id, std=0.05):
+def get_ppf_perturb(frag_id, std=0.05, visualized=False):
     frag_name = f'cloud_bin_{frag_id}'
     frag_pcd = get_pcd(pcdpath, frag_name)
     frag = np.array(frag_pcd.points)
@@ -189,15 +186,10 @@ def get_ppf_perturb(frag_id, std=0.05):
     keypts_pcd.points = open3d.utility.Vector3dVector(keypts)
     keypts = np.array(keypts_pcd.points)
 
-    visualizer = open3d.visualization.Visualizer()
-    visualizer.create_window()
-    keypts_pcd.paint_uniform_color(np.array([0.5, 0.5, 0.5]))
-    visualizer.add_geometry(keypts_pcd)
-    visualizer.add_geometry(frag_pcd)
-    visualizer.run()
-    visualizer.destroy_window()
+    if visualized:
+        visualize(frag_pcd, keypts_pcd)
 
-    local_patches = build_ppf_input(frag_pcd, keypts)
+    local_patches = build_ppf_input(frag_pcd, keypts, True)
     return local_patches
 
 
@@ -222,51 +214,48 @@ if __name__ == "__main__":
         num_frags = len(os.listdir(pcdpath))
         frag_id = 0
 
-        print('Baseline')
         frag_ppf = get_ppf_default(frag_id)
+        print(frag_ppf[7])
+        dd = frag_ppf
         frag_codeword = get_codeword(frag_ppf, model)
-        print(frag_codeword[0])
 
         # print('Default')
         # frag_ppf = get_ppf_default(frag_id)
         # frag_codeword_default = get_codeword(frag_ppf, model)
-        # print(frag_codeword_default[0])
         #
         # l2 = np.linalg.norm(frag_codeword_default - frag_codeword, ord=2, axis=1)
         # l2_avg = np.average(l2)
         # print(l2_avg)
 
-        # print('Translate')
-        # frag_ppf = get_ppf_translate(frag_id)
-        # frag_codeword_translate = get_codeword(frag_ppf, model)
-        # print(frag_codeword_translate[0])
-        #
-        # l2 = np.linalg.norm(frag_codeword_translate - frag_codeword, ord=2, axis=1)
-        # l2_avg = np.average(l2)
-        # print(l2_avg)
+        print('Translate')
+        frag_ppf = get_ppf_translate(frag_id)
+        print(frag_ppf[7])
+        frag_codeword_translate = get_codeword(frag_ppf, model)
 
-        print('Rotate')
-        frag_ppf = get_ppf_rotate(frag_id)
-        frag_codeword_rotate = get_codeword(frag_ppf, model)
-        print(frag_codeword_rotate[0])
-
-        l2 = np.linalg.norm(frag_codeword_rotate - frag_codeword, ord=2, axis=1)
+        l2 = np.linalg.norm(frag_codeword_translate - frag_codeword, ord=2, axis=1)
         l2_avg = np.average(l2)
         print(l2_avg)
 
+        # print('Rotate')
+        # frag_ppf = get_ppf_rotate(frag_id)
+        # print(frag_ppf[0])
+        # frag_codeword_rotate = get_codeword(frag_ppf, model)
+        #
+        # l2 = np.linalg.norm(frag_codeword_rotate - frag_codeword, ord=2, axis=1)
+        # l2_avg = np.average(l2)
+        # print(l2_avg)
+        #
         # print('Remove')
-        # frag_ppf = get_ppf_remove(frag_id, 0.05)
+        # frag_ppf = get_ppf_remove(frag_id, 0.4)
         # frag_codeword_remove = get_codeword(frag_ppf, model)
-        # print(frag_codeword_remove[0])
         #
         # l2 = np.linalg.norm(frag_codeword_remove - frag_codeword, ord=2, axis=1)
         # l2_avg = np.average(l2)
         # print(l2_avg)
-
+        #
         # print('Perturb')
-        # frag_ppf = get_ppf_perturb(frag_id)
+        # frag_ppf = get_ppf_perturb(frag_id, 0.01)
         # frag_codeword_perturb = get_codeword(frag_ppf, model)
-        # print(frag_codeword_perturb[0])
         #
         # l2 = np.linalg.norm(frag_codeword_perturb - frag_codeword, ord=2, axis=1)
         # l2_avg = np.average(l2)
