@@ -15,8 +15,6 @@ def build_ppf_input(pcd, keypts, experiment=False):
         _, id, _ = kdtree.search_knn_vector_3d(keypts[i], 1)
         keypts_id.append(id[0])
     neighbor = collect_local_neighbor(keypts_id, pcd, vicinity=0.3, num_points=1024, experiment=experiment)
-    print(keypts_id[7])
-    print(neighbor[7])
     local_patches = build_local_patch(keypts_id, pcd, neighbor)
     return local_patches
 
@@ -41,6 +39,11 @@ def collect_local_neighbor(ids, pcd, vicinity=0.3, num_points=1024, experiment=F
 
 def build_local_patch(ref_inds, pcd, neighbor):
     open3d.geometry.estimate_normals(pcd)
+    print(ref_inds[0])
+    print(neighbor[0][391])
+    print(np.array(pcd.points)[neighbor[0][391]] - np.array(pcd.points)[ref_inds[0]])
+    print(np.array(pcd.normals)[ref_inds[0]])
+    print(np.array(pcd.normals)[neighbor[0][391]])
     num_patches = len(ref_inds)
     num_points_per_patch = len(neighbor[0])
     # shape: num_ref_point, num_point_per_patch, 4
@@ -49,6 +52,7 @@ def build_local_patch(ref_inds, pcd, neighbor):
         ppfs = _ppf(pcd.points[ref_ind], pcd.normals[ref_ind], np.asarray(pcd.points)[inds],
                     np.asarray(pcd.normals)[inds])
         local_patch[i] = ppfs
+    print(local_patch[0][391])
     return local_patch
 
 

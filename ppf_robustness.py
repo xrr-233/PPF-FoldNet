@@ -1,4 +1,5 @@
 import importlib
+import math
 import os
 import open3d
 import torch
@@ -40,17 +41,18 @@ def visualize(frag_pcd, keypts_pcd):
 
 
 def get_codeword(local_patches, model):
+    batch_size = 50
+
     input_ = torch.tensor(local_patches)
     input_ = input_.cuda()
     model = model.cuda()
     # cuda out of memry
     desc_list = []
-    for i in range(50):
-        step_size = int(5000 / 50)
-        desc = model.encoder(input_[i * step_size: (i + 1) * step_size, :, :])
+    for i in range(math.ceil(local_patches.shape[0] / batch_size)):
+        desc = model.encoder(input_[i * batch_size: min((i + 1) * batch_size, local_patches.shape[0]), :, :])
         desc_list.append(desc.detach().cpu().numpy())
         del desc
-    desc = np.concatenate(desc_list, 0).reshape([5000, 512])
+    desc = np.concatenate(desc_list, 0).reshape([local_patches.shape[0], 512])
 
     return desc
 
@@ -85,7 +87,7 @@ def get_ppf_default(frag_id, visualized=False):
     # print(frag_pcd.has_normals())
     keypts = get_keypts(keyptspath, frag_name)
     keypts_pcd = open3d.geometry.PointCloud()
-    keypts_pcd.points = open3d.utility.Vector3dVector(keypts)
+    keypts_pcd.points = open3d.utility.Vector3dVector(keypts[1:2])
     keypts = np.array(keypts_pcd.points)
 
     if visualized:
@@ -107,7 +109,7 @@ def get_ppf_translate(frag_id, T_mat=None, visualized=False):
     frag_pcd.transform(trans_mat)
     keypts = get_keypts(keyptspath, frag_name)
     keypts_pcd = open3d.geometry.PointCloud()
-    keypts_pcd.points = open3d.utility.Vector3dVector(keypts)
+    keypts_pcd.points = open3d.utility.Vector3dVector(keypts[1:2])
     keypts_pcd.transform(trans_mat)
     keypts = np.array(keypts_pcd.points)
 
@@ -215,8 +217,6 @@ if __name__ == "__main__":
         frag_id = 0
 
         frag_ppf = get_ppf_default(frag_id)
-        print(frag_ppf[7])
-        dd = frag_ppf
         frag_codeword = get_codeword(frag_ppf, model)
 
         # print('Default')
@@ -228,9 +228,16 @@ if __name__ == "__main__":
         # print(l2_avg)
 
         print('Translate')
-        frag_ppf = get_ppf_translate(frag_id)
-        print(frag_ppf[7])
-        frag_codeword_translate = get_codeword(frag_ppf, model)
+        frag_ppf2 = get_ppf_translate(frag_id)
+        frag_codeword_translate = get_codeword(frag_ppf2, model)
+
+        l2 = np.linalg.norm(frag_ppf - frag_ppf2, ord=2, axis=2).reshape(1024)
+        print(np.average(l2))
+        for i in range(l2.shape[0]):
+            if l2[i] > 1e-6:
+                print(i)
+                print(frag_ppf2[0][i])
+                print(frag_ppf[0][i])
 
         l2 = np.linalg.norm(frag_codeword_translate - frag_codeword, ord=2, axis=1)
         l2_avg = np.average(l2)
